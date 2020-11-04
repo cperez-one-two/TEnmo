@@ -78,6 +78,17 @@ public class UserSqlDAO implements UserDAO {
 
         return userCreated && accountCreated;
     }
+    
+    @Override
+    public double viewBalance(int id) {
+    	Double balance;
+
+		String sql = "SELECT balance FROM accounts " +
+				 	"WHERE user_id = ?";
+		balance = jdbcTemplate.queryForObject(sql, Double.class, id);
+    	
+    	return Double.valueOf(balance);
+    }
 
     private User mapRowToUser(SqlRowSet rs) {
         User user = new User();

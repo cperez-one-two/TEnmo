@@ -4,36 +4,52 @@ import com.techelevator.tenmo.models.AuthenticatedUser;
 import com.techelevator.tenmo.models.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.AuthenticationServiceException;
+import com.techelevator.tenmo.services.UserService;
 import com.techelevator.view.ConsoleService;
 
 public class App {
 
-private static final String API_BASE_URL = "http://localhost:8080/";
+private static final String API_BASE_URL = "http://localhost:8080";
     
     private static final String MENU_OPTION_EXIT = "Exit";
     private static final String LOGIN_MENU_OPTION_REGISTER = "Register";
 	private static final String LOGIN_MENU_OPTION_LOGIN = "Login";
-	private static final String[] LOGIN_MENU_OPTIONS = { LOGIN_MENU_OPTION_REGISTER, LOGIN_MENU_OPTION_LOGIN, MENU_OPTION_EXIT };
+	private static final String[] LOGIN_MENU_OPTIONS = { LOGIN_MENU_OPTION_REGISTER,
+														 LOGIN_MENU_OPTION_LOGIN,
+														 MENU_OPTION_EXIT };
 	private static final String MAIN_MENU_OPTION_VIEW_BALANCE = "View your current balance";
 	private static final String MAIN_MENU_OPTION_SEND_BUCKS = "Send TE bucks";
 	private static final String MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS = "View your past transfers";
 	private static final String MAIN_MENU_OPTION_REQUEST_BUCKS = "Request TE bucks";
 	private static final String MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS = "View your pending requests";
 	private static final String MAIN_MENU_OPTION_LOGIN = "Login as different user";
-	private static final String[] MAIN_MENU_OPTIONS = { MAIN_MENU_OPTION_VIEW_BALANCE, MAIN_MENU_OPTION_SEND_BUCKS, MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS, MAIN_MENU_OPTION_REQUEST_BUCKS, MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS, MAIN_MENU_OPTION_LOGIN, MENU_OPTION_EXIT };
+	private static final String[] MAIN_MENU_OPTIONS = { MAIN_MENU_OPTION_VIEW_BALANCE, 
+														MAIN_MENU_OPTION_SEND_BUCKS,
+														MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS,
+														MAIN_MENU_OPTION_REQUEST_BUCKS,
+														MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS,
+														MAIN_MENU_OPTION_LOGIN,
+														MENU_OPTION_EXIT };
 	
     private AuthenticatedUser currentUser;
     private ConsoleService console;
+    private UserService userService;
     private AuthenticationService authenticationService;
 
     public static void main(String[] args) {
-    	App app = new App(new ConsoleService(System.in, System.out), new AuthenticationService(API_BASE_URL));
+    	App app = new App(new ConsoleService(System.in, System.out),
+    			  new AuthenticationService(API_BASE_URL),
+    			  new UserService(API_BASE_URL));
     	app.run();
     }
 
-    public App(ConsoleService console, AuthenticationService authenticationService) {
+    public App( ConsoleService console,
+				AuthenticationService authenticationService,
+				UserService userService
+			  ) {
 		this.console = console;
 		this.authenticationService = authenticationService;
+		this.userService = userService;
 	}
 
 	public void run() {
@@ -68,8 +84,12 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 	}
 
 	private void viewCurrentBalance() {
-		// TODO Auto-generated method stub
-		
+		userService.AUTH_TOKEN = currentUser.getToken();
+		System.out.println(String
+						.format("Current Balance: %.02f TE Bucks", 
+								userService.viewBalance(currentUser
+														.getUser()
+														.getId())));
 	}
 
 	private void viewTransferHistory() {
