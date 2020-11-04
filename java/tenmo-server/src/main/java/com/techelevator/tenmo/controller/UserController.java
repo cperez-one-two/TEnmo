@@ -23,5 +23,10 @@ public class UserController {
 	public double viewBalance(@PathVariable int id) {
 		return userDao.viewBalance(id);
 	}
+    
+    //@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	//@RequestMapping(path = "/user/send", method = RequestMethod.POST)
+    //public void sendBucks(int fromId, int toId, int amount)
+    
 
 }

@@ -15,4 +15,6 @@ public interface UserDAO {
     boolean create(String username, String password);
 
 	double viewBalance(int id);
+	
+	boolean sendBucks(int fromId, int toId, int amount);
 }

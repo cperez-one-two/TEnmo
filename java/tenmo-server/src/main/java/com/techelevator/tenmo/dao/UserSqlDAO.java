@@ -89,6 +89,26 @@ public class UserSqlDAO implements UserDAO {
     	
     	return Double.valueOf(balance);
     }
+    
+    @Override
+	public boolean sendBucks(int fromId, int toId, int amount) {
+    	boolean bucksWereSent = false;
+    	
+    	String sqlInsertTransfers = "BEGIN;"
+    				+ "INSERT INTO transfers (transfer_type_id, transfer_status_id, "
+    				+ "account_from, account_to, amount) values ((SELECT transfer_type_id FROM transfer_types "
+    				+ "WHERE transfer_type_desc = 'Send'), (SELECT transfer_status_id FROM transfer_statuses"
+    				+ " WHERE transfer_status_desc = 'Approved'), (SELECT account_id FROM accounts WHERE user_id = ?), "
+    				+ "(SELECT account_id FROM accounts WHERE user_id = ?), ?);"
+    				+ "UPDATE accounts SET balance = (balance - ?) WHERE user_id = ?;"
+    				+ "UPDATE accounts SET balance = (balance + ?) WHERE user_id = ?;"
+    				+ "COMMIT;";
+    	
+    	bucksWereSent = jdbcTemplate.update(sqlInsertTransfers, fromId, toId, amount, amount, fromId, amount, toId) == 3;
+
+    	
+		return bucksWereSent;
+	}
 
     private User mapRowToUser(SqlRowSet rs) {
         User user = new User();
@@ -99,4 +119,6 @@ public class UserSqlDAO implements UserDAO {
         user.setAuthorities("ROLE_USER");
         return user;
     }
+
+	
 }
