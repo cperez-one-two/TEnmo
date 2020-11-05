@@ -14,7 +14,10 @@ public interface UserDAO {
 
     boolean create(String username, String password);
 
-	double viewBalance(int id);
+	double getBalance(int id);
 	
 	boolean sendBucks(int fromId, int toId, int amount);
+
+    public int getAccountId(int id);
+
 }

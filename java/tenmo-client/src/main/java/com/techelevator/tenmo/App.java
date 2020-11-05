@@ -1,9 +1,14 @@
 package com.techelevator.tenmo;
 
+import java.math.BigDecimal;
+
 import com.techelevator.tenmo.models.AuthenticatedUser;
+import com.techelevator.tenmo.models.Transfer;
+import com.techelevator.tenmo.models.User;
 import com.techelevator.tenmo.models.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.AuthenticationServiceException;
+import com.techelevator.tenmo.services.TransferService;
 import com.techelevator.tenmo.services.UserService;
 import com.techelevator.view.ConsoleService;
 
@@ -35,21 +40,25 @@ private static final String API_BASE_URL = "http://localhost:8080";
     private ConsoleService console;
     private UserService userService;
     private AuthenticationService authenticationService;
+    private TransferService transferService;
 
     public static void main(String[] args) {
     	App app = new App(new ConsoleService(System.in, System.out),
     			  new AuthenticationService(API_BASE_URL),
-    			  new UserService(API_BASE_URL));
+    			  new UserService(API_BASE_URL),
+    			  new TransferService(API_BASE_URL));
     	app.run();
     }
 
     public App( ConsoleService console,
 				AuthenticationService authenticationService,
-				UserService userService
+				UserService userService,
+				TransferService transferService
 			  ) {
 		this.console = console;
 		this.authenticationService = authenticationService;
 		this.userService = userService;
+		this.transferService = transferService;
 	}
 
 	public void run() {
@@ -58,6 +67,7 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		System.out.println("*********************");
 		
 		registerAndLogin();
+		UserService.AUTH_TOKEN = currentUser.getToken();
 		mainMenu();
 	}
 
@@ -84,10 +94,9 @@ private static final String API_BASE_URL = "http://localhost:8080";
 	}
 
 	private void viewCurrentBalance() {
-		userService.AUTH_TOKEN = currentUser.getToken();
 		System.out.println(String
 						.format("Current Balance: %.02f TE Bucks", 
-								userService.viewBalance(currentUser
+								userService.getBalance(currentUser
 														.getUser()
 														.getId())));
 	}
@@ -103,7 +112,29 @@ private static final String API_BASE_URL = "http://localhost:8080";
 	}
 
 	private void sendBucks() {
-		// TODO Auto-generated method stub
+		// TODO :: getList of users
+		// Select a user to send money to
+		System.out.println("Please choose a user to send TE Bucks to:");
+		User toUser = (User)console.getChoiceFromOptions(userService.getUsers());
+		
+		// Select an amount
+		BigDecimal amount = 
+				new BigDecimal(console.getUserInput("Enter An Amount:\n "));
+		// Create transfer object
+		System.out.println("You entered: " + amount.toPlainString() + " TEB");
+		
+		// transferService to POST to server db
+		Transfer transfer = new Transfer();
+		transfer.setTransferTypeId(transferService.getTransferTypeId("Send"));
+		transfer.setTransferStatusId(transferService.getTransferStatusId("Approved"));
+		transfer.setAccountFrom(currentUser.getUser().getId());
+		transfer.setAccountTo(toUser.getId());
+		transfer.setAmount(amount);
+		
+		boolean hasSent = userService.sendBucks(transfer);
+		if (hasSent) {
+			System.out.println("The code executed");
+		}
 		
 	}
 

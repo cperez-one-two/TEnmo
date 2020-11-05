@@ -61,6 +61,7 @@ public class User {
       this.authorities = authorities;
    }
 
+   // TODO :: fix the ROLE naming
    public void setAuthorities(String authorities) {
       String[] roles = authorities.split(",");
       for(String role : roles) {

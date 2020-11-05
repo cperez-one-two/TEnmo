@@ -54,7 +54,7 @@ public class ConsoleService {
 	}
 
 	public String getUserInput(String prompt) {
-		out.print(prompt+": ");
+		out.print(prompt+"> ");
 		out.flush();
 		return in.nextLine();
 	}
@@ -62,7 +62,7 @@ public class ConsoleService {
 	public Integer getUserInputInteger(String prompt) {
 		Integer result = null;
 		do {
-			out.print(prompt+": ");
+			out.print(prompt+"> ");
 			out.flush();
 			String userInput = in.nextLine();
 			try {

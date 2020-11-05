@@ -79,8 +79,7 @@ public class UserSqlDAO implements UserDAO {
         return userCreated && accountCreated;
     }
     
-    @Override
-    public double viewBalance(int id) {
+    public double getBalance(int id) {
     	Double balance;
 
 		String sql = "SELECT balance FROM accounts " +
@@ -88,6 +87,14 @@ public class UserSqlDAO implements UserDAO {
 		balance = jdbcTemplate.queryForObject(sql, Double.class, id);
     	
     	return Double.valueOf(balance);
+    }
+    
+    public int getAccountId(int id) {
+    	int accountId = 0;
+    	
+    	String sql = "SELECT account_id FROM accounts WHERE user_id = ?";
+    	accountId = jdbcTemplate.queryForObject(sql, Integer.class, id);
+    	return accountId;
     }
     
     @Override
