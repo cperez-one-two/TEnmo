@@ -3,7 +3,10 @@ package com.techelevator.tenmo.services;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+
+
 
 public class TransferService {
 
@@ -14,10 +17,12 @@ public class TransferService {
         this.BASE_URL = url;
 	}
 	
-	public Integer getTransferTypeId(String type) {
+	public Integer getTransferTypeId(String type) throws TransferServiceException {
 		Integer transferType = null;
 		if (type.equalsIgnoreCase("Send")) {
-			transferType = 
+			try{
+				transferType = 
+			
 					restTemplate
 						.exchange(BASE_URL + 
 									"/send",
@@ -25,19 +30,24 @@ public class TransferService {
 									makeAuthEntity(),
 									Integer.class)
 						.getBody();
+			} catch (RestClientResponseException ex) {
+				throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+			}
 		} else if (type.equalsIgnoreCase("Request")) {
-			// TODO
+			
 		}
 
 		return transferType;
 	}
 	
 	
-	// TODO :: get transfer
-	public Integer getTransferStatusId(String status) {
+	
+	public Integer getTransferStatusId(String status) throws TransferServiceException {
 		Integer transferStatus = null;
 		if (status.equalsIgnoreCase("Approved")) {
-				transferStatus = 
+				try{
+					transferStatus = 
+				
 					restTemplate
 						.exchange(BASE_URL + 
 									"/approved",
@@ -45,11 +55,18 @@ public class TransferService {
 									makeAuthEntity(),
 									Integer.class)
 						.getBody();
+				}catch (RestClientResponseException ex) {
+					throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+				}
 			} else if (status.equalsIgnoreCase("Pending")) {
-				// TODO
+				
 			}
 		return transferStatus;
 	}
+	
+	//public getTransferHistoryById() {
+		
+	//}
 	
 	@SuppressWarnings("rawtypes")
 	private HttpEntity makeAuthEntity() {

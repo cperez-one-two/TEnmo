@@ -2,6 +2,8 @@ package com.techelevator.tenmo;
 
 import java.math.BigDecimal;
 
+import org.springframework.web.client.ResourceAccessException;
+
 import com.techelevator.tenmo.models.AuthenticatedUser;
 import com.techelevator.tenmo.models.Transfer;
 import com.techelevator.tenmo.models.User;
@@ -9,7 +11,9 @@ import com.techelevator.tenmo.models.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.AuthenticationServiceException;
 import com.techelevator.tenmo.services.TransferService;
+import com.techelevator.tenmo.services.TransferServiceException;
 import com.techelevator.tenmo.services.UserService;
+import com.techelevator.tenmo.services.UserServiceException;
 import com.techelevator.view.ConsoleService;
 
 public class App {
@@ -73,37 +77,46 @@ private static final String API_BASE_URL = "http://localhost:8080";
 
 	private void mainMenu() {
 		while(true) {
-			String choice = (String)console.getChoiceFromOptions(MAIN_MENU_OPTIONS);
-			if(MAIN_MENU_OPTION_VIEW_BALANCE.equals(choice)) {
-				viewCurrentBalance();
-			} else if(MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS.equals(choice)) {
-				viewTransferHistory();
-			} else if(MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS.equals(choice)) {
-				viewPendingRequests();
-			} else if(MAIN_MENU_OPTION_SEND_BUCKS.equals(choice)) {
-				sendBucks();
-			} else if(MAIN_MENU_OPTION_REQUEST_BUCKS.equals(choice)) {
-				requestBucks();
-			} else if(MAIN_MENU_OPTION_LOGIN.equals(choice)) {
-				login();
-			} else {
-				// the only other option on the main menu is to exit
-				exitProgram();
-			}
+			try {
+				String choice = (String)console.getChoiceFromOptions(MAIN_MENU_OPTIONS);
+				if(MAIN_MENU_OPTION_VIEW_BALANCE.equals(choice)) {
+					viewCurrentBalance();
+				} else if(MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS.equals(choice)) {
+					viewTransferHistory();
+				} else if(MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS.equals(choice)) {
+					viewPendingRequests();
+				} else if(MAIN_MENU_OPTION_SEND_BUCKS.equals(choice)) {
+					sendBucks();
+				} else if(MAIN_MENU_OPTION_REQUEST_BUCKS.equals(choice)) {
+					requestBucks();
+				} else if(MAIN_MENU_OPTION_LOGIN.equals(choice)) {
+					login();
+				} else {
+					// the only other option on the main menu is to exit
+					exitProgram();
+				}
+			} catch (ResourceAccessException ex) {
+				System.out.println("Resource Access Exception");
+			}  
 		}
 	}
 
 	private void viewCurrentBalance() {
+		try {
 		System.out.println(String
 						.format("Current Balance: %.02f TE Bucks", 
 								userService.getBalance(currentUser
 														.getUser()
 														.getId())));
+		}catch (UserServiceException ex) {
+			System.out.println("User Service Exception");
+		}
 	}
 
 	private void viewTransferHistory() {
 		// TODO Auto-generated method stub
-		
+		//Rest call to transfer and user which
+		//should return list of transfers based on userID
 	}
 
 	private void viewPendingRequests() {
@@ -112,14 +125,33 @@ private static final String API_BASE_URL = "http://localhost:8080";
 	}
 
 	private void sendBucks() {
-		// TODO :: getList of users
+		
 		// Select a user to send money to
+		try {
 		System.out.println("Please choose a user to send TE Bucks to:");
-		User toUser = (User)console.getChoiceFromOptions(userService.getUsers());
+		User toUser;
+		do {
+			toUser = (User)console.getChoiceFromOptions(userService.getUsers());
+			if(toUser.getUsername().equalsIgnoreCase(currentUser.getUser().getUsername())) {
+				System.out.println("You can not send money to yourself");
+			}
+		} while (toUser.getUsername().equalsIgnoreCase(currentUser.getUser().getUsername()));
 		
 		// Select an amount
-		BigDecimal amount = 
-				new BigDecimal(console.getUserInput("Enter An Amount:\n "));
+		BigDecimal amount;
+		do {
+
+				amount = new BigDecimal(console.getUserInput("Enter An Amount:\n "));
+			if(amount.doubleValue() > userService.getBalance(currentUser.getUser().getId()).doubleValue()) {
+				System.out.println("You can not send more money than you have available");
+				
+			}
+		}
+		while(amount.doubleValue() > userService.getBalance(currentUser.getUser().getId()).doubleValue());
+		
+			
+		
+		
 		// Create transfer object
 		System.out.println("You entered: " + amount.toPlainString() + " TEB");
 		
@@ -134,6 +166,11 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		boolean hasSent = userService.sendBucks(transfer);
 		if (hasSent) {
 			System.out.println("The code executed");
+		}
+		}catch(UserServiceException ex) {
+			System.out.println("User Service Exception");
+		}catch(TransferServiceException ex) {
+			System.out.println("Transfer Service Exception");
 		}
 		
 	}

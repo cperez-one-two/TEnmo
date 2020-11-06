@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_ROLE_USER')")
 	@RequestMapping(path = "/user", method = RequestMethod.GET)
 	public User[] getUsers() {
+    	
     	List<User> userList = userDao.findAll();
     	User[] users = new User[userList.size()];
     	users = userList.toArray(users);

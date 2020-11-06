@@ -6,6 +6,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import com.techelevator.tenmo.models.Transfer;
@@ -22,9 +23,11 @@ public class UserService {
 	}
 
 	// TODO :: Add try-catch for access exceptions
-	public BigDecimal getBalance(int id) {
-		BigDecimal balance = 
-				restTemplate
+	public BigDecimal getBalance(int id) throws UserServiceException {
+		
+			BigDecimal balance; 
+			try{
+				balance = restTemplate
 					.exchange(BASE_URL +
 								"/user/" + id +
 								"/balance",
@@ -32,12 +35,18 @@ public class UserService {
 								makeAuthEntity(),
 								BigDecimal.class)
 					.getBody();
+		} catch (RestClientResponseException ex) {
+			throw new UserServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
 		return balance;
 	}
 
 	// TODO :: Get list of users
-	public User[] getUsers() {
-		User[] users = null;
+	public User[] getUsers() throws UserServiceException {
+		User[] users;
+		try {
+			
+		
 		users = restTemplate
 					.exchange(BASE_URL +
 								"/user",
@@ -45,11 +54,16 @@ public class UserService {
 								makeAuthEntity(),
 								User[].class)
 					.getBody();
+		}catch (RestClientResponseException ex) {
+			throw new UserServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
 		return users;
 	}
 
-	public int getAccountId(int id) {
-		int accountId = 0;
+	public int getAccountId(int id) throws UserServiceException {
+		int accountId;
+		try {
+
 		accountId = restTemplate
 				.exchange(BASE_URL +
 						"/user/" + id +
@@ -58,12 +72,18 @@ public class UserService {
 						makeAuthEntity(),
 						Integer.class)
 				.getBody();
+		} catch(RestClientResponseException ex) {
+			throw new UserServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
 						
 		return (int) accountId;
 	}
 	
-	public boolean sendBucks(Transfer transfer) {
+	public boolean sendBucks(Transfer transfer) throws UserServiceException {
 		boolean hasSent = false;
+		try {
+			
+		
 		hasSent = restTemplate
 					.exchange(BASE_URL +
 							"/send",
@@ -71,8 +91,15 @@ public class UserService {
 							makeTransferEntity(transfer),
 							Boolean.class)
 					.getBody();
+		} catch(RestClientResponseException ex) {
+			throw new UserServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
 		return hasSent;
 	}
+	
+	//public boolean requestBucks() {
+		
+	//}
 
 	
 
