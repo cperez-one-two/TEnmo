@@ -1,9 +1,12 @@
 package com.techelevator.tenmo.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 
-import com.techelevator.tenmo.controller.TransferDAO;
 import com.techelevator.tenmo.model.Transfer;
 
 @Service
@@ -36,7 +39,34 @@ public class TransferSqlDAO implements TransferDAO{
 		transferStatus = jdbcTemplate.queryForObject(sql, Integer.class, status);
 		return transferStatus;
 	}		
+
+	@Override
+	public Transfer[] getTransferHistory(int id) {
+		List<Transfer> tempTransfer = new ArrayList<Transfer>();
+		String sql = "SELECT * FROM transfers t "
+				+ " JOIN accounts a ON t.account_from = a.account_id"
+				+ " WHERE a.user_id = ?";
+
+		SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id);
+		while (results.next()) {
+			Transfer result = mapRowToTransfer(results);
+			tempTransfer.add(result);
+		}
+		Transfer[] transferHistory = new Transfer[tempTransfer.size()];
+		tempTransfer.toArray(transferHistory);
+		return transferHistory;
+	}
 	
+	@Override
+	public String getAccountHolderName(int id) {
+		String username = "";
+		String sql = "SELECT username FROM users u"
+				+ " JOIN accounts a ON u.user_id = a.user_id"
+				+ " WHERE a.account_id = ?";
+		username = jdbcTemplate.queryForObject(sql, String.class, id);
+		return username;
+
+	}
 	@Override
 	public boolean sendBucks(Transfer transfer) {
 
@@ -63,5 +93,17 @@ public class TransferSqlDAO implements TransferDAO{
 						transfer.getAccountFrom(),
 						transfer.getAmount(),
 						transfer.getAccountTo()) == 1;
+	}
+	
+	private Transfer mapRowToTransfer(SqlRowSet rs) {
+		Transfer tr = new Transfer();
+		tr.setTransferId(rs.getInt("transfer_id"));
+		tr.setTransferTypeId(rs.getInt("transfer_type_id"));
+		tr.setTransferStatusId(rs.getInt("transfer_status_id"));
+		tr.setAccountFrom(rs.getInt("account_from"));
+		tr.setAccountTo(rs.getInt("account_to"));
+		tr.setAmount(rs.getBigDecimal("amount"));
+		
+		return tr;
 	}
 }

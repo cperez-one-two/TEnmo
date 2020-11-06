@@ -93,8 +93,8 @@ public class Transfer {
 
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
-		return super.toString();
+		return String.format("%d    $ %.02f",
+						transferId, amount);
 	}
 
 }

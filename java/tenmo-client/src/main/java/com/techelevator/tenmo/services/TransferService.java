@@ -1,10 +1,15 @@
 package com.techelevator.tenmo.services;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+
+import com.techelevator.tenmo.models.Transfer;
 
 
 
@@ -22,7 +27,6 @@ public class TransferService {
 		if (type.equalsIgnoreCase("Send")) {
 			try{
 				transferType = 
-			
 					restTemplate
 						.exchange(BASE_URL + 
 									"/send",
@@ -47,14 +51,13 @@ public class TransferService {
 		if (status.equalsIgnoreCase("Approved")) {
 				try{
 					transferStatus = 
-				
-					restTemplate
-						.exchange(BASE_URL + 
-									"/approved",
-									HttpMethod.GET,
-									makeAuthEntity(),
-									Integer.class)
-						.getBody();
+						restTemplate
+							.exchange(BASE_URL + 
+										"/approved",
+										HttpMethod.GET,
+										makeAuthEntity(),
+										Integer.class)
+							.getBody();
 				}catch (RestClientResponseException ex) {
 					throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
 				}
@@ -64,9 +67,59 @@ public class TransferService {
 		return transferStatus;
 	}
 	
-	//public getTransferHistoryById() {
+	public String[] getTransferHistoryById(int id) throws TransferServiceException {
+		Transfer[] transferHistory = null;
+		try {
+			transferHistory = restTemplate
+								.exchange(BASE_URL +
+											"/transfers/" + id,
+											HttpMethod.GET,
+											makeAuthEntity(),
+											Transfer[].class)
+								.getBody();
+		} catch (RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return makeTransferStringArray(transferHistory);
+	}
+	
+	public String getAccountHolderName(int id) throws TransferServiceException {
+		String name;
+		try {
+			name = restTemplate
+						.exchange(BASE_URL +
+								"/transfers/accounts/" + id,
+								HttpMethod.GET,
+								makeAuthEntity(),
+								String.class)
+						.getBody();
+		} catch (RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return name;
+	}
+	
+	private String[] makeTransferStringArray(Transfer[] trs) {
+		List<String> tempList = new ArrayList<String>();
+
+		for (Transfer t : trs) {
+			String accountHolder;
+			try {
+				accountHolder = getAccountHolderName(t.getAccountFrom());
+			} catch (TransferServiceException e) {
+				accountHolder = "error";
+			}
+			String str = String.format("%d   From/To: %s        $ %.02f",
+					t.getTransferId(),
+					accountHolder,
+					t.getAmount());
+			tempList.add(str);
+		}
+		String[] strArray = new String[tempList.size()];
 		
-	//}
+		return tempList.toArray(strArray);
+
+	}
 	
 	@SuppressWarnings("rawtypes")
 	private HttpEntity makeAuthEntity() {

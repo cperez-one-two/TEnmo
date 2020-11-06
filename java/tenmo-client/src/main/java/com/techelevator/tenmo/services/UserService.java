@@ -22,7 +22,6 @@ public class UserService {
         this.BASE_URL = url;
 	}
 
-	// TODO :: Add try-catch for access exceptions
 	public BigDecimal getBalance(int id) throws UserServiceException {
 		
 			BigDecimal balance; 
@@ -41,7 +40,6 @@ public class UserService {
 		return balance;
 	}
 
-	// TODO :: Get list of users
 	public User[] getUsers() throws UserServiceException {
 		User[] users;
 		try {

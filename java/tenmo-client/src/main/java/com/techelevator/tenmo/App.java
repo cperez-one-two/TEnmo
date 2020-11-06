@@ -113,10 +113,23 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		}
 	}
 
+	// TODO :: Fix the From/To portion
 	private void viewTransferHistory() {
-		// TODO Auto-generated method stub
 		//Rest call to transfer and user which
 		//should return list of transfers based on userID
+		System.out.println("--------------------------------------------------------------------------------");
+		System.out.println("Transfer History for " + currentUser.getUser().getUsername() + "\n");
+		System.out.println("ID    From/To        Amount");
+		System.out.println("--------------------------------------------------------------------------------");
+		// TODO :: write out detail view from transfer history
+		Transfer optionalDetailView;
+		try {
+			optionalDetailView = (Transfer)console
+						.getChoiceFromOptions(transferService
+						.getTransferHistoryById(currentUser.getUser().getId()));
+		} catch (Exception e) {
+
+		}
 	}
 
 	private void viewPendingRequests() {
@@ -128,45 +141,61 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		
 		// Select a user to send money to
 		try {
-		System.out.println("Please choose a user to send TE Bucks to:");
-		User toUser;
-		do {
-			toUser = (User)console.getChoiceFromOptions(userService.getUsers());
-			if(toUser.getUsername().equalsIgnoreCase(currentUser.getUser().getUsername())) {
-				System.out.println("You can not send money to yourself");
-			}
-		} while (toUser.getUsername().equalsIgnoreCase(currentUser.getUser().getUsername()));
-		
-		// Select an amount
-		BigDecimal amount;
-		do {
+			System.out.println("Please choose a user to send TE Bucks to:");
+			User toUser;
+			boolean isValidUser;
+			do {
+				toUser = (User)console.getChoiceFromOptions(userService.getUsers());
+				isValidUser = ( toUser
+								.getUsername()
+								.equalsIgnoreCase(currentUser.getUser().getUsername())
+							  ) ? false : true;
 
-				amount = new BigDecimal(console.getUserInput("Enter An Amount:\n "));
-			if(amount.doubleValue() > userService.getBalance(currentUser.getUser().getId()).doubleValue()) {
-				System.out.println("You can not send more money than you have available");
-				
-			}
-		}
-		while(amount.doubleValue() > userService.getBalance(currentUser.getUser().getId()).doubleValue());
-		
+				if(!isValidUser) {
+					System.out.println("You can not send money to yourself");
+				}
+			} while (!isValidUser);
 			
-		
-		
-		// Create transfer object
-		System.out.println("You entered: " + amount.toPlainString() + " TEB");
-		
-		// transferService to POST to server db
-		Transfer transfer = new Transfer();
-		transfer.setTransferTypeId(transferService.getTransferTypeId("Send"));
-		transfer.setTransferStatusId(transferService.getTransferStatusId("Approved"));
-		transfer.setAccountFrom(currentUser.getUser().getId());
-		transfer.setAccountTo(toUser.getId());
-		transfer.setAmount(amount);
-		
-		boolean hasSent = userService.sendBucks(transfer);
-		if (hasSent) {
-			System.out.println("The code executed");
-		}
+			// Select an amount
+			BigDecimal amount = new BigDecimal("0.00");
+			boolean isValidAmount = false;
+			do {
+					try {
+						amount = new BigDecimal(console.getUserInput("Enter An Amount:\n "));
+					} catch (NumberFormatException e) {
+						System.out.println("Please enter a numerical value");
+						continue;
+					}
+					isValidAmount = 
+							amount.doubleValue() < userService
+													.getBalance(currentUser
+													.getUser()
+													.getId())
+													.doubleValue();
+				if(!isValidAmount) {
+					System.out.println("You can not send more money than you have available");
+				}
+			}
+			while(!isValidAmount);
+			
+				
+			
+			
+			// Create transfer object
+			System.out.println("You entered: " + amount.toPlainString() + " TEB");
+			
+			// transferService to POST to server db
+			Transfer transfer = new Transfer();
+			transfer.setTransferTypeId(transferService.getTransferTypeId("Send"));
+			transfer.setTransferStatusId(transferService.getTransferStatusId("Approved"));
+			transfer.setAccountFrom(currentUser.getUser().getId());
+			transfer.setAccountTo(toUser.getId());
+			transfer.setAmount(amount);
+			
+			boolean hasSent = userService.sendBucks(transfer);
+			if (hasSent) {
+				System.out.println("The code executed");
+			}
 		}catch(UserServiceException ex) {
 			System.out.println("User Service Exception");
 		}catch(TransferServiceException ex) {
