@@ -72,7 +72,7 @@ public class TransferService {
 		try {
 			transferHistory = restTemplate
 								.exchange(BASE_URL +
-											"/transfers/" + id,
+											"/transfers/user/" + id,
 											HttpMethod.GET,
 											makeAuthEntity(),
 											Transfer[].class)
@@ -89,6 +89,53 @@ public class TransferService {
 			name = restTemplate
 						.exchange(BASE_URL +
 								"/transfers/accounts/" + id,
+								HttpMethod.GET,
+								makeAuthEntity(),
+								String.class)
+						.getBody();
+		} catch (RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return name;
+	}
+	
+	public Transfer getTransferDetailsById(int id) throws TransferServiceException {
+		Transfer details;
+		try {
+			details = restTemplate.exchange(BASE_URL +
+											"/transfers/" + id,
+											HttpMethod.GET,
+											makeAuthEntity(),
+											Transfer.class)
+									.getBody();
+		} catch (RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return details;
+	}
+	
+	public String getTransferTypeName(int id) throws TransferServiceException {
+		String name;
+		try {
+			name = restTemplate
+						.exchange(BASE_URL +
+								"/transfers/type/" + id,
+								HttpMethod.GET,
+								makeAuthEntity(),
+								String.class)
+						.getBody();
+		} catch (RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return name;
+	}
+	
+	public String getTransferStatusName(int id) throws TransferServiceException {
+		String name;
+		try {
+			name = restTemplate
+						.exchange(BASE_URL +
+								"/transfers/status/" + id,
 								HttpMethod.GET,
 								makeAuthEntity(),
 								String.class)

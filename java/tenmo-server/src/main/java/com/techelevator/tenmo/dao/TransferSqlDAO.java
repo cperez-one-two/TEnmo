@@ -67,6 +67,38 @@ public class TransferSqlDAO implements TransferDAO{
 		return username;
 
 	}
+	
+	@Override
+	public String getTransferTypeName(int id) {
+		String typeName = "";
+		String sql = "SELECT transfer_type_desc FROM transfer_types tt"				
+					+ " WHERE transfer_type_id = ?";
+		typeName = jdbcTemplate.queryForObject(sql, String.class, id);
+		return typeName;
+
+	}
+	
+	@Override
+	public String getTransferStatusName(int id) {
+		String statusName = "";
+		String sql = "SELECT transfer_status_desc FROM transfer_statuses ts"				
+					+ " WHERE transfer_status_id = ?";
+		statusName = jdbcTemplate.queryForObject(sql, String.class, id);
+		return statusName;
+
+	}
+	
+	@Override
+	public Transfer getTransferDetailsById(int id) {
+		Transfer details = null;
+		String sql = "SELECT * FROM transfers t"
+				+ " WHERE transfer_id = ?";
+		SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id);
+		while(results.next()) {
+			details = mapRowToTransfer(results);
+		}
+		return details;
+	}
 	@Override
 	public boolean sendBucks(Transfer transfer) {
 

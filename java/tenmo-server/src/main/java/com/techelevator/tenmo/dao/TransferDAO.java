@@ -13,4 +13,10 @@ public interface TransferDAO {
 	Transfer[] getTransferHistory(int id);
 
 	public String getAccountHolderName(int id);
+	
+	public Transfer getTransferDetailsById(int id);
+
+	String getTransferTypeName(int id);
+
+	String getTransferStatusName(int id);
 }

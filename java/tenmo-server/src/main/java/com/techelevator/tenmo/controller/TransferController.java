@@ -44,7 +44,7 @@ public class TransferController {
 	}
 
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/transfers/{id}", method = RequestMethod.GET)
+	@RequestMapping(path = "/transfers/user/{id}", method = RequestMethod.GET)
 	public Transfer[] getTransferHistory(@PathVariable int id) {
 		return transferDAO.getTransferHistory(id);
 	}
@@ -54,6 +54,23 @@ public class TransferController {
 	public String getAccountHolderName(@PathVariable int id) {
 		return transferDAO.getAccountHolderName(id);
 	}
-    	
+	
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/transfers/{id}", method = RequestMethod.GET)
+	public Transfer getTransferDetailsById(@PathVariable int id) {
+		return transferDAO.getTransferDetailsById(id);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/transfers/type/{id}", method = RequestMethod.GET)
+	public String getTransferTypeName(@PathVariable int id) {
+		return transferDAO.getTransferTypeName(id);
+	}
+    
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/transfers/status/{id}", method = RequestMethod.GET)
+	public String getTransferStatusName(@PathVariable int id) {
+		return transferDAO.getTransferStatusName(id);
+	}
     
 }

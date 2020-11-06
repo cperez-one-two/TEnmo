@@ -1,6 +1,7 @@
 package com.techelevator.tenmo;
 
 import java.math.BigDecimal;
+import java.util.regex.Pattern;
 
 import org.springframework.web.client.ResourceAccessException;
 
@@ -122,14 +123,70 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		System.out.println("ID    From/To        Amount");
 		System.out.println("--------------------------------------------------------------------------------");
 		// TODO :: write out detail view from transfer history
-		Transfer optionalDetailView;
+		String[] transferHistory = null;
 		try {
-			optionalDetailView = (Transfer)console
-						.getChoiceFromOptions(transferService
-						.getTransferHistoryById(currentUser.getUser().getId()));
+			transferHistory = transferService
+					.getTransferHistoryById(currentUser.getUser().getId());
+			
+						
 		} catch (Exception e) {
 
+		} 
+		console.displaySimpleMenu(transferHistory);
+		boolean validSelection = false;
+		Transfer transferSelection = null;
+		while(!validSelection) {
+			int transferId = (int)console.getUserInputInteger("\nPlease enter transfer ID to view details (0 to cancel): ");
+			
+			if(transferId == 0) {
+				validSelection = true;
+				continue;
+				
+			}else {
+				for(String str : transferHistory) {
+					if(str.startsWith(String.valueOf(transferId))){
+						
+						try {
+							transferSelection = transferService.getTransferDetailsById(transferId);
+							viewTransferDetails(transferSelection);
+							
+						} catch (TransferServiceException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						validSelection = true;
+						break;
+					}
+				} 
+				if(validSelection) {
+					continue;
+				}
+				System.out.println("Invalid transferID");
+			}
 		}
+		
+	}
+	
+	private void viewTransferDetails(Transfer tr) {
+		String transferString = "";
+		System.out.println("------------------------------------------------------------");
+		System.out.println("Transfer Details");
+		System.out.println("------------------------------------------------------------");
+		try {
+			transferString = String.format("Id: %d\nFrom: %s\nTo: %s\nType: %s\nStatus: %s\nAmount: $%.02f TEB ",
+							tr.getTransferId(),
+							transferService.getAccountHolderName(tr.getAccountFrom()),
+							transferService.getAccountHolderName(tr.getAccountTo()),
+							transferService.getTransferTypeName(tr.getTransferTypeId()),
+							transferService.getTransferStatusName(tr.getTransferStatusId()),
+							tr.getAmount());
+			
+		} catch (TransferServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println(transferString);
+		
 	}
 
 	private void viewPendingRequests() {

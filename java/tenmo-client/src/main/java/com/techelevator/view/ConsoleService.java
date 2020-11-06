@@ -52,6 +52,16 @@ public class ConsoleService {
 		out.print("\nPlease choose an option >>> ");
 		out.flush();
 	}
+	
+	public void displaySimpleMenu(Object[] options) {
+		out.println();
+		for (int i = 0; i < options.length; i++) {
+			
+			out.println(options[i]);
+		}
+		
+		out.flush();
+	}
 
 	public String getUserInput(String prompt) {
 		out.print(prompt+"> ");
