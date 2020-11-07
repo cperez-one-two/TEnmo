@@ -100,7 +100,7 @@ public class TransferSqlDAO implements TransferDAO{
 		return details;
 	}
 	@Override
-	public boolean sendBucks(Transfer transfer) {
+	public boolean sendBucks(int fromId, int toId, Transfer transfer) {
 
 		String sql = "BEGIN; " +
 					 "INSERT INTO transfers " +
@@ -122,9 +122,25 @@ public class TransferSqlDAO implements TransferDAO{
 						transfer.getAccountTo(),
 						transfer.getAmount(),
 						transfer.getAmount(),
-						transfer.getAccountFrom(),
+						fromId,
 						transfer.getAmount(),
-						transfer.getAccountTo()) == 1;
+						toId) == 1;
+	}
+	@Override
+	public boolean requestBucks(int fromId, int toId, Transfer transfer) {
+
+		String sql = "INSERT INTO transfers " +
+					 "(transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
+					 "VALUES (DEFAULT, ?, ?, ?, ?, ?)";
+		
+		return jdbcTemplate
+					.update(sql,
+						transfer.getTransferTypeId(),
+						transfer.getTransferStatusId(),
+						transfer.getAccountFrom(),
+						transfer.getAccountTo(),
+						transfer.getAmount()
+						) == 1;
 	}
 	
 	private Transfer mapRowToTransfer(SqlRowSet rs) {

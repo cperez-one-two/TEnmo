@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
@@ -29,7 +30,7 @@ public class TransferService {
 				transferType = 
 					restTemplate
 						.exchange(BASE_URL + 
-									"/send",
+									"/transfers/sendId",
 									HttpMethod.GET,
 									makeAuthEntity(),
 									Integer.class)
@@ -38,7 +39,18 @@ public class TransferService {
 				throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
 			}
 		} else if (type.equalsIgnoreCase("Request")) {
-			
+			try{
+				transferType = 
+					restTemplate
+						.exchange(BASE_URL + 
+									"/transfers/requestId",
+									HttpMethod.GET,
+									makeAuthEntity(),
+									Integer.class)
+						.getBody();
+			} catch (RestClientResponseException ex) {
+				throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+			}	
 		}
 
 		return transferType;
@@ -49,21 +61,46 @@ public class TransferService {
 	public Integer getTransferStatusId(String status) throws TransferServiceException {
 		Integer transferStatus = null;
 		if (status.equalsIgnoreCase("Approved")) {
-				try{
-					transferStatus = 
-						restTemplate
-							.exchange(BASE_URL + 
-										"/approved",
-										HttpMethod.GET,
-										makeAuthEntity(),
-										Integer.class)
-							.getBody();
-				}catch (RestClientResponseException ex) {
-					throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
-				}
-			} else if (status.equalsIgnoreCase("Pending")) {
-				
+			try {
+				transferStatus = 
+					restTemplate
+						.exchange(BASE_URL + 
+									"transfers/approvedId",
+									HttpMethod.GET,
+									makeAuthEntity(),
+									Integer.class)
+						.getBody();
+			} catch (RestClientResponseException ex) {
+				throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
 			}
+		} else if (status.equalsIgnoreCase("Pending")) {
+			try{
+				transferStatus = 
+					restTemplate
+						.exchange(BASE_URL + 
+									"transfers/pendingId",
+									HttpMethod.GET,
+									makeAuthEntity(),
+									Integer.class)
+						.getBody();
+			}catch (RestClientResponseException ex) {
+				throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+			}
+		}
+		else if (status.equalsIgnoreCase("Rejected")) {
+			try{
+				transferStatus = 
+					restTemplate
+						.exchange(BASE_URL + 
+									"transfers/rejectedId",
+									HttpMethod.GET,
+									makeAuthEntity(),
+									Integer.class)
+						.getBody();
+			}catch (RestClientResponseException ex) {
+				throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+			}
+		}
 		return transferStatus;
 	}
 	
@@ -166,7 +203,47 @@ public class TransferService {
 		
 		return tempList.toArray(strArray);
 
+	}	
+
+	public boolean sendBucks(int fromId, int toId, Transfer transfer) throws TransferServiceException {
+		boolean hasSent = false;
+		try {
+		hasSent = restTemplate
+					.exchange(BASE_URL +
+							"/transfers/send/" + fromId + "/" + toId,
+							HttpMethod.POST,
+							makeTransferEntity(transfer),
+							Boolean.class)
+					.getBody();
+		} catch(RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return hasSent;
 	}
+
+	public boolean requestBucks(int fromId, int toId, Transfer transfer) throws TransferServiceException {
+		boolean hasSent = false;
+		try {
+		hasSent = restTemplate
+					.exchange(BASE_URL +
+							"/transfers/request/" + fromId + "/" + toId,
+							HttpMethod.POST,
+							makeTransferEntity(transfer),
+							Boolean.class)
+					.getBody();
+		} catch(RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return hasSent;
+	}
+	@SuppressWarnings("rawtypes")
+	private HttpEntity makeTransferEntity(Transfer transfer) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(UserService.AUTH_TOKEN);
+        HttpEntity<Transfer> entity = new HttpEntity<>(transfer, headers);
+        return entity;
+    }
 	
 	@SuppressWarnings("rawtypes")
 	private HttpEntity makeAuthEntity() {

@@ -77,23 +77,7 @@ public class UserService {
 		return (int) accountId;
 	}
 	
-	public boolean sendBucks(Transfer transfer) throws UserServiceException {
-		boolean hasSent = false;
-		try {
-			
-		
-		hasSent = restTemplate
-					.exchange(BASE_URL +
-							"/send",
-							HttpMethod.POST,
-							makeTransferEntity(transfer),
-							Boolean.class)
-					.getBody();
-		} catch(RestClientResponseException ex) {
-			throw new UserServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
-		}
-		return hasSent;
-	}
+
 	
 	//public boolean requestBucks() {
 		
@@ -110,12 +94,5 @@ public class UserService {
         return entity;
     }
 
-	@SuppressWarnings("rawtypes")
-	private HttpEntity makeTransferEntity(Transfer transfer) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(AUTH_TOKEN);
-        HttpEntity<Transfer> entity = new HttpEntity<>(transfer, headers);
-        return entity;
-    }
+
 }

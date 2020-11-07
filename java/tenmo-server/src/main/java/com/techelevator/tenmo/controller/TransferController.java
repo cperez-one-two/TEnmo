@@ -15,60 +15,85 @@ import com.techelevator.tenmo.model.Transfer;
 
 @RestController
 @PreAuthorize("isAuthenticated()")
+@RequestMapping("/transfers")
 public class TransferController {
 
 	private TransferDAO transferDAO;
 
-	// TODO :: Fix URLs to all be concise
 	public TransferController(TransferDAO transferDAO) {
 		this.transferDAO = transferDAO;
 	}
 	
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/send", method = RequestMethod.GET)
-	public Integer getTransferTypeId() {
+	@RequestMapping(path = "/sendId", method = RequestMethod.GET)
+	public Integer getSendId() {
 		return transferDAO.getTransferTypeId("Send");
 	}
 
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/approved", method = RequestMethod.GET)
-	public Integer getTransferStatusId() {
+	@RequestMapping(path = "/requestId", method = RequestMethod.GET)
+	public Integer getRequestId() {
+		return transferDAO.getTransferTypeId("Request");
+	}
+
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/approvedId", method = RequestMethod.GET)
+	public Integer getApprovedId() {
 		return transferDAO.getTransferStatusId("Approved");
 	}
 
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-    @ResponseStatus(HttpStatus.CREATED)
-	@RequestMapping(path = "/send", method = RequestMethod.POST)
-	public boolean sendBucks(@Valid @RequestBody Transfer transfer) {
-		return transferDAO.sendBucks(transfer);
+	@RequestMapping(path = "/pendingId", method = RequestMethod.GET)
+	public Integer getPendingId() {
+		return transferDAO.getTransferStatusId("Pending");
 	}
 
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/transfers/user/{id}", method = RequestMethod.GET)
+	@RequestMapping(path = "/rejectedId", method = RequestMethod.GET)
+	public Integer getRejectedId() {
+		return transferDAO.getTransferStatusId("Rejected");
+	}
+
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+    @ResponseStatus(HttpStatus.CREATED)
+	@RequestMapping(path = "/send/{fromId}/{toId}", method = RequestMethod.POST)
+	public boolean sendBucks(@PathVariable int fromId, @PathVariable int toId, @Valid @RequestBody Transfer transfer) {
+		return transferDAO.sendBucks(fromId, toId, transfer);
+	}
+
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+    @ResponseStatus(HttpStatus.CREATED)
+	@RequestMapping(path = "/request/{fromId}/{toId}", method = RequestMethod.POST)
+	public boolean requestBucks(@PathVariable int fromId, @PathVariable int toId, @Valid @RequestBody Transfer transfer) {
+		return transferDAO.sendBucks(fromId, toId, transfer);
+	}
+
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/user/{id}", method = RequestMethod.GET)
 	public Transfer[] getTransferHistory(@PathVariable int id) {
 		return transferDAO.getTransferHistory(id);
 	}
 	
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/transfers/accounts/{id}", method = RequestMethod.GET)
+	@RequestMapping(path = "/accounts/{id}", method = RequestMethod.GET)
 	public String getAccountHolderName(@PathVariable int id) {
 		return transferDAO.getAccountHolderName(id);
 	}
 	
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/transfers/{id}", method = RequestMethod.GET)
+	@RequestMapping(path = "/{id}", method = RequestMethod.GET)
 	public Transfer getTransferDetailsById(@PathVariable int id) {
 		return transferDAO.getTransferDetailsById(id);
 	}
 	
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/transfers/type/{id}", method = RequestMethod.GET)
+	@RequestMapping(path = "/type/{id}", method = RequestMethod.GET)
 	public String getTransferTypeName(@PathVariable int id) {
 		return transferDAO.getTransferTypeName(id);
 	}
     
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/transfers/status/{id}", method = RequestMethod.GET)
+	@RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
 	public String getTransferStatusName(@PathVariable int id) {
 		return transferDAO.getTransferStatusName(id);
 	}

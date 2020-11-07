@@ -46,6 +46,7 @@ private static final String API_BASE_URL = "http://localhost:8080";
     private UserService userService;
     private AuthenticationService authenticationService;
     private TransferService transferService;
+    private int currentUserId;
 
     public static void main(String[] args) {
     	App app = new App(new ConsoleService(System.in, System.out),
@@ -73,6 +74,7 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		
 		registerAndLogin();
 		UserService.AUTH_TOKEN = currentUser.getToken();
+		currentUserId = currentUser.getUser().getId();
 		mainMenu();
 	}
 
@@ -106,9 +108,7 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		try {
 		System.out.println(String
 						.format("Current Balance: %.02f TE Bucks", 
-								userService.getBalance(currentUser
-														.getUser()
-														.getId())));
+								userService.getBalance(currentUserId)));
 		}catch (UserServiceException ex) {
 			System.out.println("User Service Exception");
 		}
@@ -122,30 +122,27 @@ private static final String API_BASE_URL = "http://localhost:8080";
 		System.out.println("Transfer History for " + currentUser.getUser().getUsername() + "\n");
 		System.out.println("ID    From/To        Amount");
 		System.out.println("--------------------------------------------------------------------------------");
-		// TODO :: write out detail view from transfer history
 		String[] transferHistory = null;
 		try {
 			transferHistory = transferService
-					.getTransferHistoryById(currentUser.getUser().getId());
-			
-						
+					.getTransferHistoryById(currentUserId);
 		} catch (Exception e) {
 
 		} 
 		console.displaySimpleMenu(transferHistory);
 		boolean validSelection = false;
 		Transfer transferSelection = null;
+
+		// User selects id of transfer to view details. 0 to cancel
 		while(!validSelection) {
 			int transferId = (int)console.getUserInputInteger("\nPlease enter transfer ID to view details (0 to cancel): ");
 			
 			if(transferId == 0) {
 				validSelection = true;
 				continue;
-				
 			}else {
 				for(String str : transferHistory) {
 					if(str.startsWith(String.valueOf(transferId))){
-						
 						try {
 							transferSelection = transferService.getTransferDetailsById(transferId);
 							viewTransferDetails(transferSelection);
@@ -225,19 +222,14 @@ private static final String API_BASE_URL = "http://localhost:8080";
 					}
 					isValidAmount = 
 							amount.doubleValue() < userService
-													.getBalance(currentUser
-													.getUser()
-													.getId())
+													.getBalance(currentUserId)
 													.doubleValue();
 				if(!isValidAmount) {
 					System.out.println("You can not send more money than you have available");
 				}
 			}
 			while(!isValidAmount);
-			
-				
-			
-			
+
 			// Create transfer object
 			System.out.println("You entered: " + amount.toPlainString() + " TEB");
 			
@@ -249,7 +241,7 @@ private static final String API_BASE_URL = "http://localhost:8080";
 			transfer.setAccountTo(toUser.getId());
 			transfer.setAmount(amount);
 			
-			boolean hasSent = userService.sendBucks(transfer);
+			boolean hasSent = transferService.sendBucks(currentUserId, toUser.getId(), transfer);
 			if (hasSent) {
 				System.out.println("The code executed");
 			}
@@ -262,7 +254,64 @@ private static final String API_BASE_URL = "http://localhost:8080";
 	}
 
 	private void requestBucks() {
-		// TODO Auto-generated method stub
+		// Select a user to send money to
+		try {
+			System.out.println("Please choose a user to request TE Bucks from:");
+			User fromUser;
+			boolean isValidUser;
+			do {
+				fromUser = (User)console.getChoiceFromOptions(userService.getUsers());
+				isValidUser = ( fromUser
+								.getUsername()
+								.equalsIgnoreCase(currentUser.getUser().getUsername())
+							  ) ? false : true;
+
+				if(!isValidUser) {
+					System.out.println("You can not request money from yourself");
+				}
+			} while (!isValidUser);
+			
+			// Select an amount
+			BigDecimal amount = new BigDecimal("0.00");
+			boolean isValidAmount = false;
+			do {
+					try {
+						amount = new BigDecimal(console.getUserInput("Enter An Amount:\n "));
+						isValidAmount = true;
+					} catch (NumberFormatException e) {
+						System.out.println("Please enter a numerical value");
+						continue;
+					}
+//					isValidAmount = 
+//							amount.doubleValue() < userService
+//													.getBalance(currentUserId)
+//													.doubleValue();
+//				if(!isValidAmount) {
+//					System.out.println("You can not send more money than you have available");
+//				}
+			} while(!isValidAmount);
+
+			// Create transfer object
+			System.out.println("You are requesting: " + amount.toPlainString() +
+								" TEB from " + fromUser.getUsername());
+			
+			// transferService to POST to server db
+			Transfer transfer = new Transfer();
+			transfer.setTransferTypeId(transferService.getTransferTypeId("Request"));
+			transfer.setTransferStatusId(transferService.getTransferStatusId("Pending"));
+			transfer.setAccountFrom(currentUserId);
+			transfer.setAccountTo(fromUser.getId());
+			transfer.setAmount(amount);
+			
+			boolean hasSent = transferService.sendBucks(currentUserId, fromUser.getId(), transfer);
+			if (hasSent) {
+				System.out.println("TE Bucks successfully requested");
+			}
+		}catch(UserServiceException ex) {
+			System.out.println("User Service Exception");
+		}catch(TransferServiceException ex) {
+			System.out.println("Transfer Service Exception");
+		}
 		
 	}
 	
