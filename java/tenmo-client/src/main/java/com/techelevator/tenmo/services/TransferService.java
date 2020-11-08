@@ -104,12 +104,13 @@ public class TransferService {
 		return transferStatus;
 	}
 	
-	public String[] getTransferHistoryById(int id) throws TransferServiceException {
+	public String[] getTransferHistoryById(int statusId, int id) throws TransferServiceException {
 		Transfer[] transferHistory = null;
 		try {
 			transferHistory = restTemplate
 								.exchange(BASE_URL +
-											"/transfers/user/" + id,
+											"/transfers/user/" + id +
+											"?transfer_status_id=" + statusId,
 											HttpMethod.GET,
 											makeAuthEntity(),
 											Transfer[].class)
@@ -119,7 +120,23 @@ public class TransferService {
 		}
 		return makeTransferStringArray(transferHistory);
 	}
-	
+
+//	public String[] getPendingTransactionsById(int id) throws TransferServiceException {
+//		Transfer[] transferHistory = null;
+//		try {
+//			transferHistory = restTemplate
+//								.exchange(BASE_URL +
+//											"/transfers/user/pending/" + id,
+//											HttpMethod.GET,
+//											makeAuthEntity(),
+//											Transfer[].class)
+//								.getBody();
+//		} catch (RestClientResponseException ex) {
+//			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+//		}
+//		return makeTransferStringArray(transferHistory);
+//	}
+//	
 	public String getAccountHolderName(int id) throws TransferServiceException {
 		String name;
 		try {
@@ -187,15 +204,19 @@ public class TransferService {
 		List<String> tempList = new ArrayList<String>();
 
 		for (Transfer t : trs) {
-			String accountHolder;
+			String accountFromHolder;
+			String accountToHolder;
 			try {
-				accountHolder = getAccountHolderName(t.getAccountFrom());
+				accountFromHolder = getAccountHolderName(t.getAccountFrom());
+				accountToHolder = getAccountHolderName(t.getAccountTo());
 			} catch (TransferServiceException e) {
-				accountHolder = "error";
+				accountFromHolder = "error";
+				accountToHolder = "error";
 			}
-			String str = String.format("%d   From/To: %s        $ %.02f",
+			String str = String.format("%-5d %-12s %-15s $ %.02f",
 					t.getTransferId(),
-					accountHolder,
+					accountFromHolder,
+					accountToHolder,
 					t.getAmount());
 			tempList.add(str);
 		}

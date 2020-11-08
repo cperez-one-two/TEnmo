@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -70,10 +71,21 @@ public class TransferController {
 
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
 	@RequestMapping(path = "/user/{id}", method = RequestMethod.GET)
-	public Transfer[] getTransferHistory(@PathVariable int id) {
-		return transferDAO.getTransferHistory(id);
+	public Transfer[] getTransferHistory(@RequestParam int transfer_status_id, @PathVariable int id) {
+		if (transferDAO.getTransferStatusId("Rejected") == transfer_status_id) {
+			return transferDAO.getTransferHistory("Rejected", id);
+		}
+		if (transferDAO.getTransferStatusId("Pending") == transfer_status_id) {
+			return transferDAO.getTransferHistory("Pending", id);
+		}
+		return transferDAO.getTransferHistory("Approved", id);
 	}
-	
+
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/user/pending/{id}", method = RequestMethod.GET)
+	public Transfer[] getPendingTransfers(@PathVariable int id) {
+		return transferDAO.getPendingTransfers(id);
+	}
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
 	@RequestMapping(path = "/accounts/{id}", method = RequestMethod.GET)
 	public String getAccountHolderName(@PathVariable int id) {

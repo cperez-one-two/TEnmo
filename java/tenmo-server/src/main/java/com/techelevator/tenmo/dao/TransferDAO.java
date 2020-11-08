@@ -8,7 +8,7 @@ public interface TransferDAO {
 
 	Integer getTransferStatusId(String status);
 	
-	Transfer[] getTransferHistory(int id);
+	//Transfer[] getTransferHistory(int id);
 
 	public String getAccountHolderName(int id);
 	
@@ -21,4 +21,8 @@ public interface TransferDAO {
 	boolean sendBucks(int fromId, int toId, Transfer transfer);
 
 	boolean requestBucks(int fromId, int toId, Transfer transfer);
+
+	Transfer[] getPendingTransfers(int id);
+
+	Transfer[] getTransferHistory(String status, int id);
 }

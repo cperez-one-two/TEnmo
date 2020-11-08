@@ -41,11 +41,38 @@ public class TransferSqlDAO implements TransferDAO{
 	}		
 
 	@Override
-	public Transfer[] getTransferHistory(int id) {
+	public Transfer[] getTransferHistory(String status, int id) {
 		List<Transfer> tempTransfer = new ArrayList<Transfer>();
 		String sql = "SELECT * FROM transfers t "
 				+ " JOIN accounts a ON t.account_from = a.account_id"
-				+ " WHERE a.user_id = ?";
+				+ " JOIN transfer_statuses ts ON t.transfer_status_id = ts.transfer_status_id"
+				+ " WHERE a.user_id = ?"
+				+ " AND ts.transfer_status_desc = ?"
+				+ " UNION"
+				+ " SELECT * FROM transfers t "
+				+ " JOIN accounts a ON t.account_to = a.account_id"
+				+ " JOIN transfer_statuses ts ON t.transfer_status_id = ts.transfer_status_id"
+				+ " WHERE a.user_id = ?"
+				+ " AND ts.transfer_status_desc = ?";
+
+		SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id, status, id, status);
+		while (results.next()) {
+			Transfer result = mapRowToTransfer(results);
+			tempTransfer.add(result);
+		}
+		Transfer[] transferHistory = new Transfer[tempTransfer.size()];
+		tempTransfer.toArray(transferHistory);
+		return transferHistory;
+	}
+
+	@Override
+	public Transfer[] getPendingTransfers(int id) {
+		List<Transfer> tempTransfer = new ArrayList<Transfer>();
+		String sql = "SELECT * FROM transfers t "
+				+ " JOIN accounts a ON t.account_from = a.account_id"
+				+ " JOIN transfer_statuses ts ON t.transfer_status_id = ts.transfer_status_id"
+				+ " WHERE a.user_id = ?"
+				+ " AND ts.transfer_status_desc = 'Pending'";
 
 		SqlRowSet results = jdbcTemplate.queryForRowSet(sql, id);
 		while (results.next()) {
@@ -56,7 +83,7 @@ public class TransferSqlDAO implements TransferDAO{
 		tempTransfer.toArray(transferHistory);
 		return transferHistory;
 	}
-	
+
 	@Override
 	public String getAccountHolderName(int id) {
 		String username = "";

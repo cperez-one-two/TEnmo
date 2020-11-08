@@ -29,18 +29,25 @@ private static final String API_BASE_URL = "http://localhost:8080";
 														 MENU_OPTION_EXIT };
 	private static final String MAIN_MENU_OPTION_VIEW_BALANCE = "View your current balance";
 	private static final String MAIN_MENU_OPTION_SEND_BUCKS = "Send TE bucks";
-	private static final String MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS = "View your past transfers";
+	private static final String MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS = "View Transfers";
 	private static final String MAIN_MENU_OPTION_REQUEST_BUCKS = "Request TE bucks";
 	private static final String MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS = "View your pending requests";
 	private static final String MAIN_MENU_OPTION_LOGIN = "Login as different user";
 	private static final String[] MAIN_MENU_OPTIONS = { MAIN_MENU_OPTION_VIEW_BALANCE, 
 														MAIN_MENU_OPTION_SEND_BUCKS,
-														MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS,
 														MAIN_MENU_OPTION_REQUEST_BUCKS,
-														MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS,
+														MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS,
 														MAIN_MENU_OPTION_LOGIN,
 														MENU_OPTION_EXIT };
+	private static final String TRANSFER_MENU_OPTION_VIEW_PAST_TRANSFERS = "View Past Tranfers";
+	private static final String TRANSFER_MENU_OPTION_VIEW_PENDING_TRANSFERS = "View Pending Transfers";
+	private static final String TRANSFER_MENU_OPTION_VIEW_REJECTED_TRANSFERS = "View Rejected Transfers";
+
 	
+	private static final String[] TRANSFER_MENU_OPTIONS = { TRANSFER_MENU_OPTION_VIEW_PAST_TRANSFERS,
+															TRANSFER_MENU_OPTION_VIEW_PENDING_TRANSFERS,
+															TRANSFER_MENU_OPTION_VIEW_REJECTED_TRANSFERS };
+
     private AuthenticatedUser currentUser;
     private ConsoleService console;
     private UserService userService;
@@ -85,9 +92,16 @@ private static final String API_BASE_URL = "http://localhost:8080";
 				if(MAIN_MENU_OPTION_VIEW_BALANCE.equals(choice)) {
 					viewCurrentBalance();
 				} else if(MAIN_MENU_OPTION_VIEW_PAST_TRANSFERS.equals(choice)) {
-					viewTransferHistory();
+					String transferChoice = (String)console.getChoiceFromOptions(TRANSFER_MENU_OPTIONS);
+					if (TRANSFER_MENU_OPTION_VIEW_PAST_TRANSFERS.equals(transferChoice)) {
+						viewTransferHistory("Approved");
+					} else if(TRANSFER_MENU_OPTION_VIEW_PENDING_TRANSFERS.equals(transferChoice)) {
+						viewTransferHistory("Pending");
+					} else if(TRANSFER_MENU_OPTION_VIEW_REJECTED_TRANSFERS.equals(transferChoice)) {
+						viewTransferHistory("Rejected");
+					}
 				} else if(MAIN_MENU_OPTION_VIEW_PENDING_REQUESTS.equals(choice)) {
-					viewPendingRequests();
+					//viewTransferHistory();
 				} else if(MAIN_MENU_OPTION_SEND_BUCKS.equals(choice)) {
 					sendBucks();
 				} else if(MAIN_MENU_OPTION_REQUEST_BUCKS.equals(choice)) {
@@ -103,37 +117,64 @@ private static final String API_BASE_URL = "http://localhost:8080";
 			}  
 		}
 	}
-
+	
 	private void viewCurrentBalance() {
 		try {
 		System.out.println(String
-						.format("Current Balance: %.02f TE Bucks", 
+						.format("Current Balance: $ %.02f TE Bucks", 
 								userService.getBalance(currentUserId)));
 		}catch (UserServiceException ex) {
 			System.out.println("User Service Exception");
 		}
 	}
 
-	// TODO :: Fix the From/To portion
-	private void viewTransferHistory() {
+	private void viewTransferHistory(String statusName) {
 		//Rest call to transfer and user which
 		//should return list of transfers based on userID
+		String banner = "";
+		String header = "";
+		String approvedHeader = "ID    Sent From     Received By    Amount";
+		String pendingHeader = "ID    Sent By     Recipient    Amount Requested";
 		System.out.println("--------------------------------------------------------------------------------");
-		System.out.println("Transfer History for " + currentUser.getUser().getUsername() + "\n");
-		System.out.println("ID    From/To        Amount");
+		if (statusName.equals("Approved")) {
+			banner = "Transfer History";
+			header = approvedHeader;
+		} else if (statusName.equals("Pending")) {
+			banner = "Pending transfers";
+			header = pendingHeader;
+		} else if (statusName.equals("Rejected")) {
+			banner = "Rejected transfers";
+			header = approvedHeader;
+		}
+		System.out.println(banner + " for " + currentUser.getUser().getUsername() + "\n");
+		System.out.println(header);
 		System.out.println("--------------------------------------------------------------------------------");
-		String[] transferHistory = null;
+		String[] transfers = null;
 		try {
-			transferHistory = transferService
-					.getTransferHistoryById(currentUserId);
+			transfers = transferService
+					.getTransferHistoryById(transferService.getTransferStatusId(statusName), currentUserId);
 		} catch (Exception e) {
 
 		} 
-		console.displaySimpleMenu(transferHistory);
+		console.displaySimpleMenu(transfers);
+
+		switch (statusName) {
+			case "Approved" :
+			case "Rejected" :
+				viewTransferDetails(transfers);
+				break;
+			case "Pending" :
+				approveOrDenyRequest(transfers);
+				break;
+			default :
+				System.out.println("Something went wrong");
+				break;
+		}
+	}
+	// User selects id of transfer to view details. 0 to cancel
+	public void viewTransferDetails(String[] transfers) {
 		boolean validSelection = false;
 		Transfer transferSelection = null;
-
-		// User selects id of transfer to view details. 0 to cancel
 		while(!validSelection) {
 			int transferId = (int)console.getUserInputInteger("\nPlease enter transfer ID to view details (0 to cancel): ");
 			
@@ -141,14 +182,13 @@ private static final String API_BASE_URL = "http://localhost:8080";
 				validSelection = true;
 				continue;
 			}else {
-				for(String str : transferHistory) {
+				for(String str : transfers) {
 					if(str.startsWith(String.valueOf(transferId))){
 						try {
 							transferSelection = transferService.getTransferDetailsById(transferId);
 							viewTransferDetails(transferSelection);
 							
 						} catch (TransferServiceException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						validSelection = true;
@@ -179,15 +219,65 @@ private static final String API_BASE_URL = "http://localhost:8080";
 							tr.getAmount());
 			
 		} catch (TransferServiceException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println(transferString);
 		
 	}
 
-	private void viewPendingRequests() {
-		// TODO Auto-generated method stub
+	private void approveOrDenyRequest(String[] pendingTransfers) {
+		boolean validSelection = false;
+		Transfer transferSelection = null;
+		String approveOrDeny = "";
+
+		// User selects id of transfer to view details. 0 to cancel
+		while(!validSelection) {
+			int transferId = (int)console.getUserInputInteger("\nPlease enter transfer ID to Approve/Deny request (0 to cancel): ");
+			
+			if(transferId == 0) {
+				validSelection = true;
+				continue;
+			}else {
+				for(String str : pendingTransfers) {
+					if(str.startsWith(String.valueOf(transferId))){
+						// TODO :: Change to Approve/Deny request
+						boolean aOrbSelection = false;
+						while (!aOrbSelection) {
+							approveOrDeny = console.getUserInput("You have selected transfer #" +
+								transferId + ". Type 'a' to approve, 'd' to deny.");
+							if (approveOrDeny.equalsIgnoreCase("a") ||
+								approveOrDeny.equalsIgnoreCase("d")) {
+								aOrbSelection = true;
+								continue;
+							} else {
+								System.out.println("Invalid selection.");
+							}
+						}
+//						// TODO :: write approve / deny logic
+//						try {
+//							transferSelection = transferService
+//									.setTransferStatusbyId(transferSelection.getTransferId(), approveOrDeny);
+//							
+//						} catch (TransferServiceException e) {
+//							e.printStackTrace();
+//						}
+						if (approveOrDeny.equalsIgnoreCase("a")) {
+							System.out.println("Transaction approved!");
+						} else {
+							System.out.println("Transaction denied.");
+						}
+						validSelection = true;
+						break;
+					}
+				} 
+				if(validSelection) {
+					continue;
+				}
+				System.out.println("Invalid transferID");
+			}
+			
+		}
+		
 		
 	}
 
