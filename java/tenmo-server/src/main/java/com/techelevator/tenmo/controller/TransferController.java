@@ -93,6 +93,12 @@ public class TransferController {
 	}
 	
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/accounts", method = RequestMethod.GET)
+	public Integer getAccountHolderIdByName(@RequestParam String username) {
+		return transferDAO.getAccountHolderIdByName(username);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
 	@RequestMapping(path = "/{id}", method = RequestMethod.GET)
 	public Transfer getTransferDetailsById(@PathVariable int id) {
 		return transferDAO.getTransferDetailsById(id);
@@ -108,6 +114,12 @@ public class TransferController {
 	@RequestMapping(path = "/status/{id}", method = RequestMethod.GET)
 	public String getTransferStatusName(@PathVariable int id) {
 		return transferDAO.getTransferStatusName(id);
+	}
+	
+	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
+	@RequestMapping(path = "/{id}/deny", method = RequestMethod.PUT)
+	public boolean transferUpdate(@PathVariable int id, @RequestBody Transfer transfer) {
+		return transferDAO.transferUpdate(id, transfer);
 	}
     
 }

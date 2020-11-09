@@ -96,6 +96,19 @@ public class TransferSqlDAO implements TransferDAO{
 	}
 	
 	@Override
+	public Integer getAccountHolderIdByName(String name) {
+		Integer accountId = 0;
+		String sql = "SELECT account_id FROM accounts a "
+				+ "JOIN users u ON a.user_id = u.user_id "
+				+ "WHERE username = ?";
+		
+		accountId = jdbcTemplate.queryForObject(sql, Integer.class, name);
+		return accountId;
+		
+		
+	}
+	
+	@Override
 	public String getTransferTypeName(int id) {
 		String typeName = "";
 		String sql = "SELECT transfer_type_desc FROM transfer_types tt"				
@@ -168,6 +181,32 @@ public class TransferSqlDAO implements TransferDAO{
 						transfer.getAccountTo(),
 						transfer.getAmount()
 						) == 1;
+	}
+	
+	@Override
+	public boolean transferUpdate(int id, Transfer transfer) {
+		if(transfer.getTransferStatusId() == getTransferStatusId("Approved")) {
+			String sql = "BEGIN;"
+					+ " UPDATE transfers t SET transfer_status_id = ?"
+					+ " WHERE transfer_id = ?;"
+					+ " UPDATE accounts " +
+					 "SET balance = balance - ? " +
+					 "WHERE account_id = ?; " +
+					 "UPDATE accounts " +
+					 "SET balance = balance + ? " +
+					 "WHERE account_id = ?; " +
+					 "COMMIT";
+			
+			return jdbcTemplate.update(sql, transfer.getTransferStatusId(), 
+					id, transfer.getAmount(), transfer.getAccountFrom(), 
+					transfer.getAmount(), transfer.getAccountTo()) == 3;
+		}
+		
+		String sql = "UPDATE transfers t SET transfer_status_id = ?"
+				+ " WHERE transfer_id = ?";
+		
+		return jdbcTemplate.update(sql, transfer.getTransferStatusId(), id) == 1;
+		
 	}
 	
 	private Transfer mapRowToTransfer(SqlRowSet rs) {

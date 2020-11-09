@@ -25,4 +25,8 @@ public interface TransferDAO {
 	Transfer[] getPendingTransfers(int id);
 
 	Transfer[] getTransferHistory(String status, int id);
+
+	boolean transferUpdate(int id, Transfer transfer);
+
+	Integer getAccountHolderIdByName(String name);
 }

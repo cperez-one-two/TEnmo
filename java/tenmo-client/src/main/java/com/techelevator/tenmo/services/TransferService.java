@@ -153,6 +153,22 @@ public class TransferService {
 		return name;
 	}
 	
+	public Integer getAccountHolderIdByName(String name) throws TransferServiceException {
+		int id;
+		try {
+			id = restTemplate
+						.exchange(BASE_URL +
+								"/transfers/accounts/?username=" + name,
+								HttpMethod.GET,
+								makeAuthEntity(),
+								Integer.class)
+						.getBody();
+		} catch (RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		return id;
+	}
+	
 	public Transfer getTransferDetailsById(int id) throws TransferServiceException {
 		Transfer details;
 		try {
@@ -257,6 +273,28 @@ public class TransferService {
 		}
 		return hasSent;
 	}
+	
+	public boolean transferUpdate(int id, Transfer transfer) throws TransferServiceException {
+		
+		boolean hasSent = false;
+		
+		try {
+			hasSent = restTemplate.exchange(BASE_URL +
+										"/transfers/" + id + "/deny", 
+										HttpMethod.PUT,
+										makeTransferEntity(transfer),
+										Boolean.class)
+							.getBody();
+		}catch (RestClientResponseException ex) {
+			throw new TransferServiceException(ex.getRawStatusCode() + " : " + ex.getResponseBodyAsString());
+		}
+		
+		return hasSent;
+		
+	}
+	
+	
+	
 	@SuppressWarnings("rawtypes")
 	private HttpEntity makeTransferEntity(Transfer transfer) {
         HttpHeaders headers = new HttpHeaders();

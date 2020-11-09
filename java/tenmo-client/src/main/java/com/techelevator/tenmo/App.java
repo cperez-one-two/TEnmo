@@ -1,6 +1,10 @@
 package com.techelevator.tenmo;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.springframework.web.client.ResourceAccessException;
@@ -249,10 +253,66 @@ private static final String API_BASE_URL = "http://localhost:8080";
 								approveOrDeny.equalsIgnoreCase("d")) {
 								aOrbSelection = true;
 								continue;
+								
 							} else {
 								System.out.println("Invalid selection.");
 							}
+						} 
+						
+						List<String> strSplit = new ArrayList<String>(Arrays.asList(str.split(" ")));
+						strSplit.get(3).replace("$", "");
+						strSplit.removeAll(Collections.singleton(null));
+						strSplit.removeAll(Collections.singleton(""));
+						
+						
+						if(strSplit.get(1).equalsIgnoreCase(currentUser.getUser().getUsername())) {
+							System.out.println("You can not approve or deny a request that you sent.");
+							break;
+						}else {
+							Transfer transfer = new Transfer();
+							transfer.setTransferId(transferId);
+							if (approveOrDeny.equalsIgnoreCase("a")) {
+								try {
+									transfer.setTransferStatusId(transferService.getTransferStatusId("Approved"));
+								} catch (TransferServiceException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}else {
+								try {
+									transfer.setTransferStatusId(transferService.getTransferStatusId("Rejected"));
+								} catch (TransferServiceException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								
+							}
+							try {
+								transfer.setAccountFrom(transferService.getAccountHolderIdByName(strSplit.get(1)));
+							} catch (TransferServiceException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
+							try {
+								transfer.setAccountFrom(transferService.getAccountHolderIdByName(strSplit.get(2)));
+							} catch (TransferServiceException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
+							transfer.setAmount(new BigDecimal (strSplit.get(4)));
+							boolean hasSent;
+							try {
+								hasSent = transferService.transferUpdate(transferId, transfer);
+								
+							} catch (TransferServiceException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
+						
+						
 //						// TODO :: write approve / deny logic
 //						try {
 //							transferSelection = transferService
@@ -262,9 +322,9 @@ private static final String API_BASE_URL = "http://localhost:8080";
 //							e.printStackTrace();
 //						}
 						if (approveOrDeny.equalsIgnoreCase("a")) {
-							System.out.println("Transaction approved!");
+							System.out.println("Transaction successfully approved!");
 						} else {
-							System.out.println("Transaction denied.");
+							System.out.println("Transaction successfully denied.");
 						}
 						validSelection = true;
 						break;
@@ -372,13 +432,13 @@ private static final String API_BASE_URL = "http://localhost:8080";
 						System.out.println("Please enter a numerical value");
 						continue;
 					}
-//					isValidAmount = 
-//							amount.doubleValue() < userService
-//													.getBalance(currentUserId)
-//													.doubleValue();
-//				if(!isValidAmount) {
-//					System.out.println("You can not send more money than you have available");
-//				}
+					isValidAmount = 
+							amount.doubleValue() < userService
+													.getBalance(currentUserId)
+													.doubleValue();
+				if(!isValidAmount) {
+					System.out.println("You can not send more money than you have available");
+				}
 			} while(!isValidAmount);
 
 			// Create transfer object
