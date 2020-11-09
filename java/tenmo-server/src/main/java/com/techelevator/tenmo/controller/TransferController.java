@@ -117,7 +117,7 @@ public class TransferController {
 	}
 	
 	@PreAuthorize("hasRole('ROLE_ROLE_USER')")
-	@RequestMapping(path = "/{id}/deny", method = RequestMethod.PUT)
+	@RequestMapping(path = "/{id}/update", method = RequestMethod.PUT)
 	public boolean transferUpdate(@PathVariable int id, @RequestBody Transfer transfer) {
 		return transferDAO.transferUpdate(id, transfer);
 	}

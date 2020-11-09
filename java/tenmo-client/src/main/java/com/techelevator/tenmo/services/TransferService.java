@@ -280,7 +280,7 @@ public class TransferService {
 		
 		try {
 			hasSent = restTemplate.exchange(BASE_URL +
-										"/transfers/" + id + "/deny", 
+										"/transfers/" + id + "/update", 
 										HttpMethod.PUT,
 										makeTransferEntity(transfer),
 										Boolean.class)

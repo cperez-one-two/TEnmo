@@ -164,7 +164,7 @@ public class TransferSqlDAO implements TransferDAO{
 						transfer.getAmount(),
 						fromId,
 						transfer.getAmount(),
-						toId) == 1;
+						toId) == 3;
 	}
 	@Override
 	public boolean requestBucks(int fromId, int toId, Transfer transfer) {
